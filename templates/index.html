@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام طلبات الاستضافة</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Cairo for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                    <h1 class="display-5 fw-bold text-primary">نظام طلبات الاستضافة</h1>
+                    <p class="lead text-muted">يرجى ملء البيانات التالية لإرسال طلب الاستضافة</p>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Main Form -->
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-edit me-2"></i>نموذج طلب الاستضافة</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" action="{{ url_for('handle_submission') }}" enctype="multipart/form-data" id="hospitalityForm">
+                            
+                            <!-- Owner Information -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="owner" class="form-label fw-bold">
+                                        <i class="fas fa-user me-2 text-primary"></i>اسم المالك *
+                                    </label>
+                                    <input type="text" class="form-control" id="owner" name="owner" required 
+                                           placeholder="أدخل اسم المالك">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="membership" class="form-label fw-bold">
+                                        <i class="fas fa-id-card me-2 text-primary"></i>رقم العضوية *
+                                    </label>
+                                    <input type="text" class="form-control" id="membership" name="membership" required 
+                                           placeholder="أدخل رقم العضوية">
+                                </div>
+                            </div>
+
+                            <!-- Booking Information -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-alt me-2 text-primary"></i>أرقام الحجز
+                                </label>
+                                <div id="bookingContainer">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="booking" placeholder="رقم الحجز">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeBooking(this)">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addBooking()">
+                                    <i class="fas fa-plus me-1"></i>إضافة رقم حجز آخر
+                                </button>
+                            </div>
+
+                            <!-- Date Information -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fromDate" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-check me-2 text-primary"></i>تاريخ الوصول *
+                                    </label>
+                                    <input type="date" class="form-control" id="fromDate" name="fromDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="toDate" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-times me-2 text-primary"></i>تاريخ المغادرة *
+                                    </label>
+                                    <input type="date" class="form-control" id="toDate" name="toDate" required>
+                                </div>
+                            </div>
+
+                            <!-- Guest Information -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-users me-2 text-primary"></i>أسماء الضيوف
+                                </label>
+                                <div id="guestContainer">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="guest" placeholder="اسم الضيف">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeGuest(this)">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGuest()">
+                                    <i class="fas fa-plus me-1"></i>إضافة ضيف آخر
+                                </button>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="mb-4">
+                                <label for="telegram" class="form-label fw-bold">
+                                    <i class="fab fa-telegram me-2 text-primary"></i>رقم التليجرام *
+                                </label>
+                                <input type="tel" class="form-control" id="telegram" name="telegram" required 
+                                       placeholder="01xxxxxxxxx" pattern="01[0-9]{8,9}">
+                                <div class="form-text">يجب أن يبدأ الرقم بـ 01 ويتكون من 10-11 رقم</div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label fw-bold">
+                                    <i class="fas fa-sticky-note me-2 text-primary"></i>ملاحظات إضافية
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                          placeholder="أدخل أي ملاحظات أو طلبات خاصة"></textarea>
+                            </div>
+
+                            <!-- File Upload -->
+                            <div class="mb-4">
+                                <label for="file" class="form-label fw-bold">
+                                    <i class="fas fa-paperclip me-2 text-primary"></i>مرفقات (اختياري)
+                                </label>
+                                <input type="file" class="form-control" id="file" name="file" 
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <div class="form-text">الأنواع المسموحة: PDF, Word, صور (الحد الأقصى: 10MB)</div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>إرسال طلب الاستضافة
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        سيتم مراجعة طلبك والرد عليك في أقرب وقت ممكن
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
